@@ -121,11 +121,35 @@ class AlexNet(Sequential):
         # data augmentation: alter intensities of RGB. See paper for details
 
 
+def resize_image_keep_aspect_ratio(image, lo_dim=256):
+    """Aspect ratio preserving image resize with the shorter dimension resized to equal lo_dim.
+
+    Code inspired from https://stackoverflow.com/a/48648242 but converted to TF2.
+    """
+    initial_width = tf.shape(image)[0]
+    initial_height = tf.shape(image)[1]
+
+    min_dim = tf.math.minimum(initial_width, initial_height)
+    ratio = tf.cast(min_dim, dtype=tf.float32) / tf.constant(lo_dim, dtype=tf.float32)
+
+    new_width = tf.cast(
+        tf.cast(initial_width, dtype=tf.float32) / ratio, dtype=tf.int32
+    )
+    new_height = tf.cast(
+        tf.cast(initial_height, dtype=tf.float32) / ratio, dtype=tf.int32
+    )
+
+    image = tf.image.resize(image, [new_width, new_height])
+    image = tf.cast(image, dtype=tf.uint8)
+    return image
+
+
 def process_image(img):
     img = tf.image.decode_jpeg(img, channels=3)
-    img = fancy_pca(img)
+    img = resize_image_keep_aspect_ratio(img)
     img = tf.image.random_crop(img, size=[224, 224, 3])
     img = tf.image.random_flip_left_right(img)
+    img = fancy_pca(img)
     img = tf.image.convert_image_dtype(img, tf.float32)
     return img
 
