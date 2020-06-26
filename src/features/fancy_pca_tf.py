@@ -32,7 +32,7 @@ def fancy_pca(original_img: Tensor):
 
     cov = cov_tf(img)
     lambdas, p, _ = tf.linalg.svd(cov)
-    alphas = tf.random.normal((3,), 0, 0.3)
+    alphas = tf.random.normal((3,), 0, 0.1)
     delta = tf.tensordot(p, alphas * lambdas, axes=1)
 
     img = img + delta
