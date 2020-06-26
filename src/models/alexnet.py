@@ -7,7 +7,7 @@ from tensorflow.keras.layers import Conv2D, Dense, Dropout, Flatten, Lambda, Max
 from tensorflow.keras.losses import categorical_crossentropy
 from tensorflow.keras.optimizers import SGD
 
-from src.features.pca_color_augmentation import fancy_pca
+from src.features.fancy_pca_tf import fancy_pca
 
 
 class AlexNet(Sequential):
@@ -144,9 +144,22 @@ def resize_image_keep_aspect_ratio(image, lo_dim=256):
     return image
 
 
-def process_image(img):
+def crop_center(image):
+    h = tf.shape(image)[0]
+    w = tf.shape(image)[1]
+
+    if h > w:
+        cropped = tf.image.crop_to_bounding_box(image, (h - w) // 2, 0, w, w)
+    else:
+        cropped = tf.image.crop_to_bounding_box(image, 0, (w - h) // 2, h, h)
+    return cropped
+
+
+def process_image(img_path):
+    img = tf.io.read_file(img_path)
     img = tf.image.decode_jpeg(img, channels=3)
     img = resize_image_keep_aspect_ratio(img)
+    img = crop_center(img)
     img = tf.image.random_crop(img, size=[224, 224, 3])
     img = tf.image.random_flip_left_right(img)
     img = fancy_pca(img)
