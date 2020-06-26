@@ -3,6 +3,18 @@ import tensorflow as tf
 from tensorflow import Tensor
 
 
+def cov_tf(img):
+    """Covariance matrix calculation
+
+    Code taken from https://stackoverflow.com/a/49850652
+    """
+    mean_x = tf.reduce_mean(img, axis=0, keepdims=True)
+    mx = tf.matmul(tf.transpose(mean_x), mean_x)
+    vx = tf.matmul(tf.transpose(img), img) / tf.cast(tf.shape(img)[0], tf.float32)
+    cov = vx - mx
+    return cov
+
+
 def fancy_pca(original_img: Tensor):
     """PCA Colour Augmentation as described in AlexNet paper.
 
@@ -18,13 +30,9 @@ def fancy_pca(original_img: Tensor):
     img -= mean
     img /= std
 
-    mean_x = tf.reduce_mean(img, axis=0, keepdims=True)
-    mx = tf.matmul(tf.transpose(mean_x), mean_x)
-    vx = tf.matmul(tf.transpose(img), img) / tf.cast(tf.shape(img)[0], tf.float32)
-    cov = vx - mx
-
+    cov = cov_tf(img)
     lambdas, p, _ = tf.linalg.svd(cov)
-    alphas = tf.random.normal((3,), 0, 0.1)
+    alphas = tf.random.normal((3,), 0, 0.3)
     delta = tf.tensordot(p, alphas * lambdas, axes=1)
 
     img = img + delta
