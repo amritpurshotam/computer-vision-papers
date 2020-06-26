@@ -145,6 +145,10 @@ def resize_image_keep_aspect_ratio(image, lo_dim=256):
 
 
 def crop_center(image):
+    """Center crop largest square of image
+
+    Code taken from https://stackoverflow.com/a/54866162
+    """
     h = tf.shape(image)[0]
     w = tf.shape(image)[1]
 
