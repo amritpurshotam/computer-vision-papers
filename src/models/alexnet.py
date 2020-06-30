@@ -7,7 +7,7 @@ from tensorflow.keras.layers import Conv2D, Dense, Dropout, Flatten, Lambda, Max
 from tensorflow.keras.losses import categorical_crossentropy
 from tensorflow.keras.optimizers import SGD
 
-from src.features.fancy_pca_tf import fancy_pca
+from src.utilities.image import crop_center, fancy_pca, resize_image_keep_aspect_ratio
 
 
 class AlexNet(Sequential):
@@ -118,56 +118,26 @@ class AlexNet(Sequential):
             optimizer=optimizer, loss=categorical_crossentropy, metrics=["accuracy"]
         )
 
-        # data augmentation: alter intensities of RGB. See paper for details
 
-
-def resize_image_keep_aspect_ratio(image, lo_dim=256):
-    """Aspect ratio preserving image resize with the shorter dimension resized to equal lo_dim.
-
-    Code inspired from https://stackoverflow.com/a/48648242 but converted to TF2.
-    """
-    initial_width = tf.shape(image)[0]
-    initial_height = tf.shape(image)[1]
-
-    min_dim = tf.math.minimum(initial_width, initial_height)
-    ratio = tf.cast(min_dim, dtype=tf.float32) / tf.constant(lo_dim, dtype=tf.float32)
-
-    new_width = tf.cast(
-        tf.cast(initial_width, dtype=tf.float32) / ratio, dtype=tf.int32
-    )
-    new_height = tf.cast(
-        tf.cast(initial_height, dtype=tf.float32) / ratio, dtype=tf.int32
-    )
-
-    image = tf.image.resize(image, [new_width, new_height])
-    image = tf.cast(image, dtype=tf.uint8)
-    return image
-
-
-def crop_center(image):
-    """Center crop largest square of image
-
-    Code taken from https://stackoverflow.com/a/54866162
-    """
-    h = tf.shape(image)[0]
-    w = tf.shape(image)[1]
-
-    if h > w:
-        cropped = tf.image.crop_to_bounding_box(image, (h - w) // 2, 0, w, w)
-    else:
-        cropped = tf.image.crop_to_bounding_box(image, 0, (w - h) // 2, h, h)
-    return cropped
-
-
-def process_image(img_path):
+def decode_image(img_path):
     img = tf.io.read_file(img_path)
     img = tf.image.decode_jpeg(img, channels=3)
+    return img
+
+
+def augment(img):
     img = resize_image_keep_aspect_ratio(img)
     img = crop_center(img)
     img = tf.image.random_crop(img, size=[224, 224, 3])
     img = tf.image.random_flip_left_right(img)
     img = fancy_pca(img)
     img = tf.image.convert_image_dtype(img, tf.float32)
+    return img
+
+
+def read_and_augment(img_path):
+    img = decode_image(img_path)
+    img = augment(img)
     return img
 
 
@@ -181,24 +151,20 @@ def show_batch(image_batch):
 
 
 if __name__ == "__main__":
-    model = AlexNet()
-    scheduler = ReduceLROnPlateau(
-        monitor="val_loss", factor=0.1, patience=10, min_lr=0.00001
-    )
-    # model.fit([0], [0], batch_size=128, epochs=90, callbacks=[scheduler])
-
-    model.summary()
-
+    #  repeat -> shuffle -> map -> batch -> batch-wise map -> prefetch
     data_dir = "F:/Test/*/*"
     dataset = (
         tf.data.Dataset.list_files(data_dir)
         .repeat()
         .shuffle(250)
-        .map(process_image)
+        .map(read_and_augment)
         .batch(25)
         .prefetch(1)
     )
 
-    batch = dataset.take(25)
-    print(type(batch))
-    show_batch(list(batch))
+    model = AlexNet()
+    scheduler = ReduceLROnPlateau(
+        monitor="val_loss", factor=0.1, patience=10, min_lr=0.00001
+    )
+
+    model.fit(dataset, epochs=90, callbacks=[scheduler])
