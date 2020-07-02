@@ -1,4 +1,8 @@
+import os
+import pathlib
+
 import matplotlib.pyplot as plt
+import numpy as np
 import tensorflow as tf
 from tensorflow.keras import Sequential
 from tensorflow.keras.callbacks import ReduceLROnPlateau
@@ -145,47 +149,45 @@ def show_batch(image_batch, label_batch):
     plt.show()
 
 
-def decode_image(img_path):
-    img = tf.io.read_file(img_path)
-    img = tf.image.decode_jpeg(img, channels=3)
-    return img
-
-
-def augment(img):
-    img = resize_image_keep_aspect_ratio(img)
-    img = crop_center(img)
-    img = tf.image.random_crop(img, size=[224, 224, 3])
-    img = tf.image.random_flip_left_right(img)
-    img = fancy_pca(img)
-    img = tf.image.convert_image_dtype(img, tf.float32)
-    return img
-
-
-def read_and_augment(img_path):
-    img = decode_image(img_path)
-    img = augment(img)
-    return img
-
-
-def show_batch(image_batch):
-    plt.figure(figsize=(10, 10))
-    for n in range(25):
-        plt.subplot(5, 5, n + 1)
-        plt.imshow(image_batch[n])
-        plt.axis("off")
-    plt.show()
-
-
 if __name__ == "__main__":
+
+    data_dir = pathlib.Path("F:\\ILSVRC2012_img_train")
+    CLASS_NAMES = np.array([item.name for item in data_dir.glob("*")])
+    NUM_SAMPLES = 1281167
+    BATCH_SIZE = 64
+
+    def get_label(file_path):
+        parts = tf.strings.split(file_path, os.path.sep)
+        return parts[-2] == CLASS_NAMES
+
+    def decode_image(img_path):
+        img = tf.io.read_file(img_path)
+        img = tf.image.decode_jpeg(img, channels=3)
+        return img
+
+    def augment(img):
+        img = resize_image_keep_aspect_ratio(img)
+        img = crop_center(img)
+        img = tf.image.random_crop(img, size=[224, 224, 3])
+        img = tf.image.random_flip_left_right(img)
+        img = fancy_pca(img)
+        img = tf.image.convert_image_dtype(img, tf.float32)
+        return img
+
+    def process_path(file_path: str):
+        label = get_label(file_path)
+        image = decode_image(file_path)
+        image = augment(image)
+        return image, label
+
     #  repeat -> shuffle -> map -> batch -> batch-wise map -> prefetch
-    data_dir = "F:/Test/*/*"
     dataset = (
-        tf.data.Dataset.list_files(data_dir)
+        tf.data.Dataset.list_files(str(data_dir / "*/*"))
         .repeat()
-        .shuffle(250)
-        .map(read_and_augment)
-        .batch(25)
-        .prefetch(1)
+        .shuffle(NUM_SAMPLES)
+        .map(process_path, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        .batch(BATCH_SIZE)
+        .prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
     )
 
     model = AlexNet()
@@ -193,4 +195,9 @@ if __name__ == "__main__":
         monitor="val_loss", factor=0.1, patience=10, min_lr=0.00001
     )
 
-    model.fit(dataset, epochs=90, callbacks=[scheduler])
+    model.fit(
+        dataset,
+        epochs=90,
+        steps_per_epoch=NUM_SAMPLES // BATCH_SIZE,
+        callbacks=[scheduler],
+    )
