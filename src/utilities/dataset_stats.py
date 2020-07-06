@@ -3,11 +3,7 @@ import pathlib
 import numpy as np
 import tensorflow as tf
 
-from src.utilities.image import (
-    channel_mean,
-    crop_center,
-    resize_image_keep_aspect_ratio,
-)
+from src.utilities.image import crop_center, resize_image_keep_aspect_ratio
 
 
 def process(image_path):
