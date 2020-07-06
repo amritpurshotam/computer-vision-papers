@@ -154,7 +154,7 @@ if __name__ == "__main__":
     data_dir = pathlib.Path("F:\\ILSVRC2012_img_train")
     CLASS_NAMES = np.array([item.name for item in data_dir.glob("*")])
     NUM_SAMPLES = 1281167
-    BATCH_SIZE = 64
+    BATCH_SIZE = 128
 
     def get_label(file_path):
         parts = tf.strings.split(file_path, os.path.sep)
