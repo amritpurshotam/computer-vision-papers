@@ -123,7 +123,7 @@ class AlexNet(Sequential):
         )
 
 
-def get_mappings():
+def get_mappings() -> dict:
     mappings = {}
     f = open("F:\\caffe_ilsvrc12.tar\\caffe_ilsvrc12\\synset_words.txt")
     for line in f:
