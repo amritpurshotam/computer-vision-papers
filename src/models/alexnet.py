@@ -11,11 +11,16 @@ from tensorflow.keras.layers import Conv2D, Dense, Dropout, Flatten, Lambda, Max
 from tensorflow.keras.losses import categorical_crossentropy
 from tensorflow.keras.optimizers import SGD
 
-from src.utilities.image import crop_center, fancy_pca, resize_image_keep_aspect_ratio
+from src.utilities.image import (
+    crop_center,
+    fancy_pca,
+    resize_image_keep_aspect_ratio,
+    subtract_mean,
+)
 
 
 class AlexNet(Sequential):
-    def __init__(self):
+    def __init__(self, num_class: int):
         super().__init__()
         self.add(
             Conv2D(
@@ -110,7 +115,7 @@ class AlexNet(Sequential):
         self.add(Dropout(0.5))
         self.add(
             Dense(
-                1000,
+                num_class,
                 activation="softmax",
                 kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                 bias_initializer="zeros",
@@ -140,7 +145,8 @@ def augment(img):
     img = tf.image.random_crop(img, size=[224, 224, 3])
     img = tf.image.random_flip_left_right(img)
     img = fancy_pca(img)
-    img = tf.image.convert_image_dtype(img, tf.float32)
+    img = tf.cast(img, dtype=tf.float32)
+    img = subtract_mean(img)
     return img
 
 
@@ -169,17 +175,29 @@ def build_dataset(data_dir: Path, num_samples: int, batch_size: int):
 
 if __name__ == "__main__":
 
-    train_dir = pathlib.Path("F:\\ILSVRC2012_img_train")
-    val_dir = pathlib.Path("F:\\ILSVRC2012_img_val")
-    CLASS_NAMES = np.array([item.name for item in train_dir.glob("*")])
-    TRAIN_NUM_SAMPLES = 1281167
-    VAL_NUM_SAMPLES = 50000
+    # train_dir = pathlib.Path("F:\\ILSVRC2012_img_train")
+    # val_dir = pathlib.Path("F:\\ILSVRC2012_img_val")
+    # TRAIN_NUM_SAMPLES = 1281167
+    # VAL_NUM_SAMPLES = 50000
+    # BATCH_SIZE = 128
+
+    train_dir = pathlib.Path(
+        "F:\\imagenette\\downloads\\extracted\\TAR_GZ.s3_fast-ai-imageclas_imagenette2-320UCCpEwzqA0gnKCPLEtLbfpgcbyr6Pc5xzNW4ATAFxV4.tgz\\imagenette2-320\\train"
+    )
+    val_dir = pathlib.Path(
+        "F:\\imagenette\\downloads\\extracted\\TAR_GZ.s3_fast-ai-imageclas_imagenette2-320UCCpEwzqA0gnKCPLEtLbfpgcbyr6Pc5xzNW4ATAFxV4.tgz\\imagenette2-320\\val"
+    )
+    TRAIN_NUM_SAMPLES = 9469
+    VAL_NUM_SAMPLES = 3925
     BATCH_SIZE = 128
+
+    CLASS_NAMES = np.array([item.name for item in train_dir.glob("*")])
+    num_classes = CLASS_NAMES.shape[0]
 
     train_ds = build_dataset(train_dir, TRAIN_NUM_SAMPLES, BATCH_SIZE)
     val_ds = build_dataset(val_dir, VAL_NUM_SAMPLES, BATCH_SIZE)
 
-    model = AlexNet()
+    model = AlexNet(num_classes)
     scheduler = ReduceLROnPlateau(
         monitor="val_loss", factor=0.1, patience=10, min_lr=0.00001
     )
@@ -189,5 +207,12 @@ if __name__ == "__main__":
         epochs=90,
         steps_per_epoch=TRAIN_NUM_SAMPLES // BATCH_SIZE,
         validation_data=val_ds,
+        validation_steps=VAL_NUM_SAMPLES // BATCH_SIZE,
         callbacks=[scheduler],
     )
+
+# todo mixed precision training
+# todo wandb callback
+# todo tensorboard callback
+# todo model checkpointing
+# todo tfrecords

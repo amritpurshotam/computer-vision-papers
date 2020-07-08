@@ -72,6 +72,13 @@ def crop_center(image):
     return cropped
 
 
+def subtract_mean(image):
+    mean = tf.constant([121.64567695, 115.7963513, 101.6740183], dtype=tf.float32)
+    mean = tf.reshape(mean, [1, 1, 3])
+    image = tf.math.subtract(image, mean)
+    return image
+
+
 if __name__ == "__main__":
     img = tf.io.read_file("cat.jpeg")
     img = tf.image.decode_jpeg(img)
