@@ -1,5 +1,6 @@
 import os
 import pathlib
+from pathlib import Path
 
 import numpy as np
 import tensorflow as tf
@@ -122,46 +123,61 @@ class AlexNet(Sequential):
         )
 
 
-if __name__ == "__main__":
+def get_label(file_path, class_names):
+    parts = tf.strings.split(file_path, os.path.sep)
+    return parts[-2] == class_names
 
-    data_dir = pathlib.Path("F:\\ILSVRC2012_img_train")
-    CLASS_NAMES = np.array([item.name for item in data_dir.glob("*")])
-    NUM_SAMPLES = 1281167
-    BATCH_SIZE = 128
 
-    def get_label(file_path):
-        parts = tf.strings.split(file_path, os.path.sep)
-        return parts[-2] == CLASS_NAMES
+def decode_image(img_path):
+    img = tf.io.read_file(img_path)
+    img = tf.image.decode_jpeg(img, channels=3)
+    return img
 
-    def decode_image(img_path):
-        img = tf.io.read_file(img_path)
-        img = tf.image.decode_jpeg(img, channels=3)
-        return img
 
-    def augment(img):
-        img = resize_image_keep_aspect_ratio(img)
-        img = crop_center(img)
-        img = tf.image.random_crop(img, size=[224, 224, 3])
-        img = tf.image.random_flip_left_right(img)
-        img = fancy_pca(img)
-        img = tf.image.convert_image_dtype(img, tf.float32)
-        return img
+def augment(img):
+    img = resize_image_keep_aspect_ratio(img)
+    img = crop_center(img)
+    img = tf.image.random_crop(img, size=[224, 224, 3])
+    img = tf.image.random_flip_left_right(img)
+    img = fancy_pca(img)
+    img = tf.image.convert_image_dtype(img, tf.float32)
+    return img
 
-    def process_path(file_path: str):
-        label = get_label(file_path)
-        image = decode_image(file_path)
-        image = augment(image)
-        return image, label
 
+def process_path(file_path: str, class_names: np.ndarray):
+    label = get_label(file_path, class_names)
+    image = decode_image(file_path)
+    image = augment(image)
+    return image, label
+
+
+def build_dataset(data_dir: Path, num_samples: int, batch_size: int):
     #  repeat -> shuffle -> map -> batch -> batch-wise map -> prefetch
-    dataset = (
+    ds = (
         tf.data.Dataset.list_files(str(data_dir / "*/*"))
         .repeat()
-        .shuffle(NUM_SAMPLES)
-        .map(process_path, num_parallel_calls=tf.data.experimental.AUTOTUNE)
-        .batch(BATCH_SIZE)
+        .shuffle(num_samples)
+        .map(
+            lambda file_path: process_path(file_path, CLASS_NAMES),
+            num_parallel_calls=tf.data.experimental.AUTOTUNE,
+        )
+        .batch(batch_size)
         .prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
     )
+    return ds
+
+
+if __name__ == "__main__":
+
+    train_dir = pathlib.Path("F:\\ILSVRC2012_img_train")
+    val_dir = pathlib.Path("F:\\ILSVRC2012_img_val")
+    CLASS_NAMES = np.array([item.name for item in train_dir.glob("*")])
+    TRAIN_NUM_SAMPLES = 1281167
+    VAL_NUM_SAMPLES = 50000
+    BATCH_SIZE = 128
+
+    train_ds = build_dataset(train_dir, TRAIN_NUM_SAMPLES, BATCH_SIZE)
+    val_ds = build_dataset(val_dir, VAL_NUM_SAMPLES, BATCH_SIZE)
 
     model = AlexNet()
     scheduler = ReduceLROnPlateau(
@@ -169,8 +185,9 @@ if __name__ == "__main__":
     )
 
     model.fit(
-        dataset,
+        train_ds,
         epochs=90,
-        steps_per_epoch=NUM_SAMPLES // BATCH_SIZE,
+        steps_per_epoch=TRAIN_NUM_SAMPLES // BATCH_SIZE,
+        validation_data=val_ds,
         callbacks=[scheduler],
     )
