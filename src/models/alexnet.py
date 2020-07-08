@@ -1,3 +1,4 @@
+import datetime
 import os
 import pathlib
 from pathlib import Path
@@ -5,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras import Sequential
-from tensorflow.keras.callbacks import ReduceLROnPlateau
+from tensorflow.keras.callbacks import ReduceLROnPlateau, TensorBoard
 from tensorflow.keras.initializers import RandomNormal
 from tensorflow.keras.layers import Conv2D, Dense, Dropout, Flatten, Lambda, MaxPool2D
 from tensorflow.keras.losses import categorical_crossentropy
@@ -202,17 +203,19 @@ if __name__ == "__main__":
         monitor="val_loss", factor=0.1, patience=10, min_lr=0.00001
     )
 
+    log_dir = "./logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    tensorboard = TensorBoard(log_dir=log_dir)
+
     model.fit(
         train_ds,
         epochs=90,
         steps_per_epoch=TRAIN_NUM_SAMPLES // BATCH_SIZE,
         validation_data=val_ds,
         validation_steps=VAL_NUM_SAMPLES // BATCH_SIZE,
-        callbacks=[scheduler],
+        callbacks=[scheduler, tensorboard],
     )
 
 # todo mixed precision training
 # todo wandb callback
-# todo tensorboard callback
 # todo model checkpointing
 # todo tfrecords
