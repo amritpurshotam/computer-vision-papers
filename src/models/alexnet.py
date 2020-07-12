@@ -6,12 +6,13 @@ from pathlib import Path
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras import Sequential
-from tensorflow.keras.callbacks import ReduceLROnPlateau, TensorBoard
+from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, TensorBoard
 from tensorflow.keras.initializers import RandomNormal
 from tensorflow.keras.layers import Conv2D, Dense, Dropout, Flatten, Lambda, MaxPool2D
 from tensorflow.keras.losses import categorical_crossentropy
 from tensorflow.keras.optimizers import SGD
 
+from src.callbacks.last_model_manager import LastModelManager
 from src.utilities.image import (
     crop_center,
     fancy_pca,
@@ -192,6 +193,7 @@ if __name__ == "__main__":
     VAL_NUM_SAMPLES = 3925
     BATCH_SIZE = 128
 
+    EPOCHS = 90
     CLASS_NAMES = np.array([item.name for item in train_dir.glob("*")])
     num_classes = CLASS_NAMES.shape[0]
 
@@ -206,13 +208,37 @@ if __name__ == "__main__":
     log_dir = "./logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     tensorboard = TensorBoard(log_dir=log_dir)
 
+    base_dir = "./models/alexnet"
+    last_model_checkpoint = ModelCheckpoint(
+        filepath=os.path.join(base_dir, "last_model_{epoch:02d}-{val_accuracy:.2f}"),
+        save_best_only=False,
+        save_weights_only=False,
+        save_freq="epoch",
+    )
+    last_model_manager = LastModelManager(base_dir)
+
+    best_model_checkpoint = ModelCheckpoint(
+        filepath=os.path.join(base_dir, "best_model"),
+        save_best_only=True,
+        save_weights_only=False,
+        monitor="val_accuracy",
+        mode="max",
+    )
+
     model.fit(
         train_ds,
-        epochs=90,
+        epochs=EPOCHS,
+        initial_epoch=0,
         steps_per_epoch=TRAIN_NUM_SAMPLES // BATCH_SIZE,
         validation_data=val_ds,
         validation_steps=VAL_NUM_SAMPLES // BATCH_SIZE,
-        callbacks=[scheduler, tensorboard],
+        callbacks=[
+            scheduler,
+            tensorboard,
+            last_model_checkpoint,
+            best_model_checkpoint,
+            last_model_manager,
+        ],
     )
 
 # todo mixed precision training
