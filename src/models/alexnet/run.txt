@@ -1,0 +1,11 @@
+python src\models\alexnet\train.py ^
+--train_dir="F:\\imagenette\\downloads\\extracted\\TAR_GZ.s3_fast-ai-imageclas_imagenette2-320UCCpEwzqA0gnKCPLEtLbfpgcbyr6Pc5xzNW4ATAFxV4.tgz\\imagenette2-320\\train" ^
+--val_dir="F:\\imagenette\\downloads\\extracted\\TAR_GZ.s3_fast-ai-imageclas_imagenette2-320UCCpEwzqA0gnKCPLEtLbfpgcbyr6Pc5xzNW4ATAFxV4.tgz\\imagenette2-320\\val" ^
+--train_num_samples=9469 ^
+--val_num_samples=3925
+
+python src\models\alexnet\train.py ^
+--train_dir="F:\\ILSVRC2012_img_train" ^
+--val_dir="F:\\ILSVRC2012_img_val" ^
+--train_num_samples=1281167 ^
+--val_num_samples=50000

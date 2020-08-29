@@ -5,6 +5,7 @@ import pathlib
 import re
 from pathlib import Path
 
+import click
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, TensorBoard
@@ -48,14 +49,16 @@ def process_path(file_path: str, class_names: np.ndarray):
     return image, label
 
 
-def build_dataset(data_dir: Path, num_samples: int, batch_size: int):
+def build_dataset(
+    data_dir: Path, num_samples: int, batch_size: int, class_names: np.ndarray
+):
     #  repeat -> shuffle -> map -> batch -> batch-wise map -> prefetch
     ds = (
         tf.data.Dataset.list_files(str(data_dir / "*/*"))
         .repeat()
         .shuffle(num_samples)
         .map(
-            lambda file_path: process_path(file_path, CLASS_NAMES),
+            lambda file_path: process_path(file_path, class_names),
             num_parallel_calls=tf.data.experimental.AUTOTUNE,
         )
         .batch(batch_size)
@@ -80,30 +83,36 @@ def get_last_model_path(base_dir: str):
     return None
 
 
-if __name__ == "__main__":
+@click.command()
+@click.option(
+    "--train_dir", type=str, required=True, help="Path to training set directory"
+)
+@click.option(
+    "--val_dir", type=str, required=True, help="Path to validation set directory"
+)
+@click.option(
+    "--train_num_samples",
+    type=int,
+    required=True,
+    help="Number of samples in training set",
+)
+@click.option(
+    "--val_num_samples",
+    type=int,
+    required=True,
+    help="Number of samples in validation set",
+)
+def train(train_dir, val_dir, train_num_samples, val_num_samples):
+    train_dir = pathlib.Path(train_dir)
+    val_dir = pathlib.Path(train_dir)
 
-    # train_dir = pathlib.Path("F:\\ILSVRC2012_img_train")
-    # val_dir = pathlib.Path("F:\\ILSVRC2012_img_val")
-    # TRAIN_NUM_SAMPLES = 1281167
-    # VAL_NUM_SAMPLES = 50000
-    # BATCH_SIZE = 128
-
-    train_dir = pathlib.Path(
-        "F:\\imagenette\\downloads\\extracted\\TAR_GZ.s3_fast-ai-imageclas_imagenette2-320UCCpEwzqA0gnKCPLEtLbfpgcbyr6Pc5xzNW4ATAFxV4.tgz\\imagenette2-320\\train"
-    )
-    val_dir = pathlib.Path(
-        "F:\\imagenette\\downloads\\extracted\\TAR_GZ.s3_fast-ai-imageclas_imagenette2-320UCCpEwzqA0gnKCPLEtLbfpgcbyr6Pc5xzNW4ATAFxV4.tgz\\imagenette2-320\\val"
-    )
-    TRAIN_NUM_SAMPLES = 9469
-    VAL_NUM_SAMPLES = 3925
     BATCH_SIZE = 128
-
     EPOCHS = 90
     CLASS_NAMES = np.array([item.name for item in train_dir.glob("*")])
     num_classes = CLASS_NAMES.shape[0]
 
-    train_ds = build_dataset(train_dir, TRAIN_NUM_SAMPLES, BATCH_SIZE)
-    val_ds = build_dataset(val_dir, VAL_NUM_SAMPLES, BATCH_SIZE)
+    train_ds = build_dataset(train_dir, train_num_samples, BATCH_SIZE, CLASS_NAMES)
+    val_ds = build_dataset(val_dir, val_num_samples, BATCH_SIZE, CLASS_NAMES)
 
     scheduler = ReduceLROnPlateau(
         monitor="val_loss", factor=0.1, patience=10, min_lr=0.00001
@@ -141,9 +150,9 @@ if __name__ == "__main__":
         train_ds,
         epochs=EPOCHS,
         initial_epoch=initial_epoch,
-        steps_per_epoch=TRAIN_NUM_SAMPLES // BATCH_SIZE,
+        steps_per_epoch=train_num_samples // BATCH_SIZE,
         validation_data=val_ds,
-        validation_steps=VAL_NUM_SAMPLES // BATCH_SIZE,
+        validation_steps=val_num_samples // BATCH_SIZE,
         callbacks=[
             scheduler,
             tensorboard,
@@ -152,3 +161,7 @@ if __name__ == "__main__":
             last_model_manager,
         ],
     )
+
+
+if __name__ == "__main__":
+    train()
