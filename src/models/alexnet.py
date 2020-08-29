@@ -1,6 +1,8 @@
 import datetime
+import glob
 import os
 import pathlib
+import re
 from pathlib import Path
 
 import numpy as np
@@ -175,6 +177,22 @@ def build_dataset(data_dir: Path, num_samples: int, batch_size: int):
     return ds
 
 
+def get_epoch_from_last_model_path(last_model_path: str) -> int:
+    match = re.search(r"last_model_(\d{2})", last_model_path)
+    if match is not None:
+        epoch = int(match.group(1))
+        return epoch
+    return 0
+
+
+def get_last_model_path(base_dir: str):
+    paths = glob.glob(os.path.join(base_dir, "last_model_*"))
+    if paths:
+        last_model_path = paths[0]
+        return last_model_path
+    return None
+
+
 if __name__ == "__main__":
 
     # train_dir = pathlib.Path("F:\\ILSVRC2012_img_train")
@@ -200,7 +218,6 @@ if __name__ == "__main__":
     train_ds = build_dataset(train_dir, TRAIN_NUM_SAMPLES, BATCH_SIZE)
     val_ds = build_dataset(val_dir, VAL_NUM_SAMPLES, BATCH_SIZE)
 
-    model = AlexNet(num_classes)
     scheduler = ReduceLROnPlateau(
         monitor="val_loss", factor=0.1, patience=10, min_lr=0.00001
     )
@@ -208,7 +225,7 @@ if __name__ == "__main__":
     log_dir = "./logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     tensorboard = TensorBoard(log_dir=log_dir)
 
-    base_dir = "./models/alexnet"
+    base_dir = ".\\models\\alexnet"
     last_model_checkpoint = ModelCheckpoint(
         filepath=os.path.join(base_dir, "last_model_{epoch:02d}-{val_accuracy:.2f}"),
         save_best_only=False,
@@ -225,10 +242,18 @@ if __name__ == "__main__":
         mode="max",
     )
 
+    last_model_path = get_last_model_path(base_dir)
+
+    model = AlexNet(num_classes)
+    initial_epoch = 0
+    if last_model_path:
+        initial_epoch = get_epoch_from_last_model_path(last_model_path)
+        model = tf.keras.models.load_model(last_model_path)
+
     model.fit(
         train_ds,
         epochs=EPOCHS,
-        initial_epoch=0,
+        initial_epoch=initial_epoch,
         steps_per_epoch=TRAIN_NUM_SAMPLES // BATCH_SIZE,
         validation_data=val_ds,
         validation_steps=VAL_NUM_SAMPLES // BATCH_SIZE,
