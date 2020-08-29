@@ -240,8 +240,3 @@ if __name__ == "__main__":
             last_model_manager,
         ],
     )
-
-# todo mixed precision training
-# todo wandb callback
-# todo model checkpointing
-# todo tfrecords
