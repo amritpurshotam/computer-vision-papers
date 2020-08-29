@@ -1,4 +1,3 @@
-import datetime
 import glob
 import os
 import pathlib
@@ -8,7 +7,9 @@ from pathlib import Path
 import click
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, TensorBoard
+import wandb
+from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
+from wandb.keras import WandbCallback
 
 from src.callbacks.last_model_manager import LastModelManager
 from src.models.alexnet.model import AlexNet
@@ -102,7 +103,10 @@ def get_last_model_path(base_dir: str):
     required=True,
     help="Number of samples in validation set",
 )
-def train(train_dir, val_dir, train_num_samples, val_num_samples):
+@click.option("--tag", type=str, required=True, help="wandb tag")
+def train(train_dir, val_dir, train_num_samples, val_num_samples, tag):
+    wandb.init(project="computer-vision-papers", tags=[tag])
+
     train_dir = pathlib.Path(train_dir)
     val_dir = pathlib.Path(train_dir)
 
@@ -117,9 +121,6 @@ def train(train_dir, val_dir, train_num_samples, val_num_samples):
     scheduler = ReduceLROnPlateau(
         monitor="val_loss", factor=0.1, patience=10, min_lr=0.00001
     )
-
-    log_dir = "./logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    tensorboard = TensorBoard(log_dir=log_dir)
 
     base_dir = ".\\models\\alexnet"
     last_model_checkpoint = ModelCheckpoint(
@@ -155,10 +156,10 @@ def train(train_dir, val_dir, train_num_samples, val_num_samples):
         validation_steps=val_num_samples // BATCH_SIZE,
         callbacks=[
             scheduler,
-            tensorboard,
             last_model_checkpoint,
             best_model_checkpoint,
             last_model_manager,
+            WandbCallback(save_model=False),
         ],
     )
 

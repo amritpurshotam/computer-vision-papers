@@ -131,3 +131,6 @@ dmypy.json
 # Tensorflow
 /logs
 /models
+
+# Weights and Biases
+/wandb
