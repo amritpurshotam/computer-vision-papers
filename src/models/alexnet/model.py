@@ -7,7 +7,7 @@ from tensorflow.keras.optimizers import SGD
 from src.layers.local_response_normalisation import LocalResponseNormalization
 
 
-def get_alexnet_model(num_class: int):
+def get_alexnet_model(num_class: int) -> Sequential:
     model = Sequential(
         [
             Conv2D(

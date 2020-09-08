@@ -6,14 +6,11 @@ import click
 import numpy as np
 import tensorflow as tf
 import wandb
-from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
+from tensorflow.keras.callbacks import ReduceLROnPlateau
 from wandb.keras import WandbCallback
 
-from src.callbacks.last_model_manager import (
-    LastModelManager,
-    get_epoch_from_last_model_path,
-    get_last_model_path,
-)
+from src.callbacks.helper import get_best_model_checkpoint, get_last_model_checkpoint
+from src.callbacks.last_model_manager import LastModelManager, get_latest_trained_model
 from src.models.alexnet.model import get_alexnet_model
 from src.utilities.image import (
     crop_center,
@@ -97,45 +94,26 @@ def train(train_dir, val_dir, train_num_samples, val_num_samples, tag):
     val_dir = pathlib.Path(train_dir)
 
     BATCH_SIZE = 128
-    EPOCHS = 90
     CLASS_NAMES = np.array([item.name for item in train_dir.glob("*")])
-    num_classes = CLASS_NAMES.shape[0]
-
     train_ds = build_dataset(train_dir, train_num_samples, BATCH_SIZE, CLASS_NAMES)
     val_ds = build_dataset(val_dir, val_num_samples, BATCH_SIZE, CLASS_NAMES)
+
+    base_dir = ".\\models\\alexnet"
+    last_model_checkpoint = get_last_model_checkpoint(base_dir)
+    best_model_checkpoint = get_best_model_checkpoint(base_dir)
+    last_model_manager = LastModelManager(base_dir)
+
+    num_classes = CLASS_NAMES.shape[0]
+    model = get_alexnet_model(num_classes)
+    model, initial_epoch = get_latest_trained_model(model, base_dir)
 
     scheduler = ReduceLROnPlateau(
         monitor="val_loss", factor=0.1, patience=10, min_lr=0.00001
     )
 
-    base_dir = ".\\models\\alexnet"
-    last_model_checkpoint = ModelCheckpoint(
-        filepath=os.path.join(base_dir, "last_model_{epoch:02d}-{val_accuracy:.2f}"),
-        save_best_only=False,
-        save_weights_only=False,
-        save_freq="epoch",
-    )
-    last_model_manager = LastModelManager(base_dir)
-
-    best_model_checkpoint = ModelCheckpoint(
-        filepath=os.path.join(base_dir, "best_model"),
-        save_best_only=True,
-        save_weights_only=False,
-        monitor="val_accuracy",
-        mode="max",
-    )
-
-    last_model_path = get_last_model_path(base_dir)
-
-    model = get_alexnet_model(num_classes)
-    initial_epoch = 0
-    if last_model_path:
-        initial_epoch = get_epoch_from_last_model_path(last_model_path)
-        model = tf.keras.models.load_model(last_model_path)
-
     model.fit(
         train_ds,
-        epochs=EPOCHS,
+        epochs=90,
         initial_epoch=initial_epoch,
         steps_per_epoch=train_num_samples // BATCH_SIZE,
         validation_data=val_ds,

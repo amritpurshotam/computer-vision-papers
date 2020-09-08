@@ -2,8 +2,10 @@ import glob
 import os
 import re
 import shutil
+from typing import Tuple
 
 from tensorflow.keras.callbacks import Callback
+from tensorflow.keras.models import Model, load_model
 
 
 class LastModelManager(Callback):
@@ -38,3 +40,12 @@ def get_last_model_path(base_dir: str):
         last_model_path = paths[0]
         return last_model_path
     return None
+
+
+def get_latest_trained_model(model: Model, base_dir: str) -> Tuple[Model, int]:
+    initial_epoch = 0
+    last_model_path = get_last_model_path(base_dir)
+    if last_model_path:
+        initial_epoch = get_epoch_from_last_model_path(last_model_path)
+        model = load_model(last_model_path)
+    return model, initial_epoch
