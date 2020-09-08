@@ -1,4 +1,6 @@
+import glob
 import os
+import re
 import shutil
 
 from tensorflow.keras.callbacks import Callback
@@ -20,3 +22,19 @@ class LastModelManager(Callback):
                 shutil.rmtree(os.path.join(self.base_dir, existing_model))
                 break
         return super().on_epoch_end(epoch, logs=logs)
+
+
+def get_epoch_from_last_model_path(last_model_path: str) -> int:
+    match = re.search(r"last_model_(\d{2})", last_model_path)
+    if match is not None:
+        epoch = int(match.group(1))
+        return epoch
+    return 0
+
+
+def get_last_model_path(base_dir: str):
+    paths = glob.glob(os.path.join(base_dir, "last_model_*"))
+    if paths:
+        last_model_path = paths[0]
+        return last_model_path
+    return None

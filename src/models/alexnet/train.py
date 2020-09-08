@@ -1,7 +1,5 @@
-import glob
 import os
 import pathlib
-import re
 from pathlib import Path
 
 import click
@@ -11,7 +9,11 @@ import wandb
 from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from wandb.keras import WandbCallback
 
-from src.callbacks.last_model_manager import LastModelManager
+from src.callbacks.last_model_manager import (
+    LastModelManager,
+    get_epoch_from_last_model_path,
+    get_last_model_path,
+)
 from src.models.alexnet.model import get_alexnet_model
 from src.utilities.image import (
     crop_center,
@@ -66,22 +68,6 @@ def build_dataset(
         .prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
     )
     return ds
-
-
-def get_epoch_from_last_model_path(last_model_path: str) -> int:
-    match = re.search(r"last_model_(\d{2})", last_model_path)
-    if match is not None:
-        epoch = int(match.group(1))
-        return epoch
-    return 0
-
-
-def get_last_model_path(base_dir: str):
-    paths = glob.glob(os.path.join(base_dir, "last_model_*"))
-    if paths:
-        last_model_path = paths[0]
-        return last_model_path
-    return None
 
 
 @click.command()
