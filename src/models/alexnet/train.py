@@ -12,7 +12,7 @@ from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from wandb.keras import WandbCallback
 
 from src.callbacks.last_model_manager import LastModelManager
-from src.models.alexnet.model import AlexNet
+from src.models.alexnet.model import get_alexnet_model
 from src.utilities.image import (
     crop_center,
     fancy_pca,
@@ -141,7 +141,7 @@ def train(train_dir, val_dir, train_num_samples, val_num_samples, tag):
 
     last_model_path = get_last_model_path(base_dir)
 
-    model = AlexNet(num_classes)
+    model = get_alexnet_model(num_classes)
     initial_epoch = 0
     if last_model_path:
         initial_epoch = get_epoch_from_last_model_path(last_model_path)
