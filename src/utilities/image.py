@@ -8,7 +8,7 @@ from src.utilities.math import cov_tf
 def fancy_pca(original_img: Tensor):
     """PCA Colour Augmentation as described in AlexNet paper.
 
-    Code adapted from https://github.com/ANONYMOUS-GURU/AlexNet/blob/master/Different%20layers/PCA_color_augmentation.py
+    Code adapted from https://github.com/ANONYMOUS-GURU/AlexNet/blob/master/Different%20layers/PCA_color_augmentation.py # noqa: B950
     """
     rows = original_img.shape[0]
     columns = original_img.shape[1]
