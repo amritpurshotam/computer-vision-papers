@@ -35,7 +35,8 @@ def fancy_pca(original_img: Tensor):
 
 
 def resize_image_keep_aspect_ratio(image, lo_dim=256):
-    """Aspect ratio preserving image resize with the shorter dimension resized to equal lo_dim.
+    """Aspect ratio preserving image resize with the shorter dimension resized
+    to equal lo_dim.
 
     Code adapted from https://stackoverflow.com/a/48648242 but converted to TF2.
     """
