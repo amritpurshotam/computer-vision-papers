@@ -23,6 +23,11 @@ setup(
             "mypy==0.902",
         ],
         "hooks": ["pre-commit==2.11.1"],
+        "notebook": [
+            "ipywidgets==7.6.3",
+            "jupyterlab==3.0.16",
+            "widgetsnbextension==3.5.1",
+        ],
         "test": ["pytest==6.2.4"],
     },
 )
