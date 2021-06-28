@@ -1,28 +1,58 @@
-import matplotlib.pyplot as plt
 import tensorflow as tf
-from tensorflow import Tensor
 
-from src.utilities.math import cov_tf
+from src.utilities.math import cov
+
+# https://github.com/eladhoffer/convNet.pytorch/blob/master/preprocess.py
+_IMAGENET_PCA = {
+    "eigval": tf.constant([0.2175, 0.0188, 0.0045], dtype=tf.float32),
+    "eigvec": tf.constant(
+        [
+            [-0.5675, 0.7192, 0.4009],
+            [-0.5808, -0.0045, -0.8140],
+            [-0.5836, -0.6948, 0.4203],
+        ],
+        dtype=tf.float32,
+    ),
+}
 
 
-def fancy_pca(original_img: Tensor):
+def fancy_pca(
+    img: tf.Tensor, imagenet_pca: bool = False, alpha_std: float = 0.1
+) -> tf.Tensor:
+
     """PCA Colour Augmentation as described in AlexNet paper.
 
-    Code adapted from https://github.com/ANONYMOUS-GURU/AlexNet/blob/master/Different%20layers/PCA_color_augmentation.py # noqa: B950
-    """
-    rows = original_img.shape[0]
-    columns = original_img.shape[1]
-    img = tf.reshape(original_img, (rows * columns, 3))
+    Parameters
+    ----------
+    img : tf.Tensor
+        3-dimensional Tensor of shape (h, w, 3)
+    imagenet_pca : bool, optional
+        Whether or not to use pre-computed imagenet principal components (from
+        the whole dataset), by default False
 
+    Returns
+    -------
+    tf.Tensor
+        3-dimensional Tensor corresponding to the image with some noise added
+        along the principal components of the colour channels.
+    """
+    rows, columns, _ = img.shape
+    img = tf.reshape(img, (rows * columns, 3))
     img = tf.cast(img, "float32")
+
     mean = tf.reduce_mean(img, axis=0)
     std = tf.math.reduce_std(img, axis=0)
     img -= mean
     img /= std
 
-    cov = cov_tf(img)
-    lambdas, p, _ = tf.linalg.svd(cov)
-    alphas = tf.random.normal((3,), 0, 0.1)
+    if imagenet_pca:
+        lambdas = _IMAGENET_PCA["eigval"]
+        p = _IMAGENET_PCA["eigvec"]
+    else:
+        covariance = cov(img)
+        lambdas, p, _ = tf.linalg.svd(covariance)
+
+    alphas = tf.random.normal((3,), 0, alpha_std)
     delta = tf.tensordot(p, alphas * lambdas, axes=1)
 
     img = img + delta
@@ -78,20 +108,3 @@ def subtract_mean(image):
     mean = tf.reshape(mean, [1, 1, 3])
     image = tf.math.subtract(image, mean)
     return image
-
-
-if __name__ == "__main__":
-    img = tf.io.read_file("cat.jpeg")
-    img = tf.image.decode_jpeg(img)
-
-    fig = plt.figure(figsize=(8, 8))
-    columns = 4
-    rows = 5
-
-    fig.add_subplot(rows, columns, 1)
-    plt.imshow(img)
-    for i in range(2, columns * rows + 1):
-        pca = fancy_pca(img)
-        fig.add_subplot(rows, columns, i)
-        plt.imshow(pca)
-    plt.show()
