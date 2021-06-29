@@ -21,6 +21,7 @@ setup(
             "flake8-comprehensions==3.5.0",
             "isort==5.8.0",
             "mypy==0.902",
+            "rope==0.19.0",
         ],
         "hooks": ["pre-commit==2.11.1"],
         "notebook": [
