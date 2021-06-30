@@ -1,5 +1,4 @@
 import os
-import pathlib
 from pathlib import Path
 
 import click
@@ -11,6 +10,7 @@ from wandb.keras import WandbCallback
 
 from src.callbacks.helper import get_best_model_checkpoint, get_last_model_checkpoint
 from src.callbacks.last_model_manager import LastModelManager, get_latest_trained_model
+from src.dataset import get_dataset_config
 from src.models.alexnet.model import get_alexnet_model
 from src.utilities.image import (
     crop_center,
@@ -31,26 +31,34 @@ def decode_image(img_path):
     return img
 
 
-def augment(img):
+def augment(img: tf.Tensor, apply_pca: bool, imagenet_pca: bool):
     img = resize_image_keep_aspect_ratio(img)
     img = crop_center(img)
     img = tf.image.random_crop(img, size=[224, 224, 3])
     img = tf.image.random_flip_left_right(img)
-    img = fancy_pca(img)
+    if apply_pca:
+        img = fancy_pca(img, imagenet_pca)
     img = tf.cast(img, dtype=tf.float32)
     img = subtract_mean(img)
     return img
 
 
-def process_path(file_path: str, class_names: np.ndarray):
+def process_path(
+    file_path: str, class_names: np.ndarray, apply_pca: bool, imagenet_pca: bool
+):
     label = get_label(file_path, class_names)
     image = decode_image(file_path)
-    image = augment(image)
+    image = augment(image, apply_pca, imagenet_pca)
     return image, label
 
 
 def build_dataset(
-    data_dir: Path, num_samples: int, batch_size: int, class_names: np.ndarray
+    data_dir: Path,
+    num_samples: int,
+    batch_size: int,
+    class_names: np.ndarray,
+    apply_pca: bool,
+    imagenet_pca: bool,
 ):
     #  repeat -> shuffle -> map -> batch -> batch-wise map -> prefetch
     ds = (
@@ -58,7 +66,9 @@ def build_dataset(
         .repeat()
         .shuffle(num_samples)
         .map(
-            lambda file_path: process_path(file_path, class_names),
+            lambda file_path: process_path(
+                file_path, class_names, apply_pca, imagenet_pca
+            ),
             num_parallel_calls=tf.data.experimental.AUTOTUNE,
         )
         .batch(batch_size)
@@ -69,36 +79,46 @@ def build_dataset(
 
 @click.command()
 @click.option(
-    "--train_dir", type=str, required=True, help="Path to training set directory"
+    "--dataset", type=click.Choice(["imagenet", "imagenette"], case_sensitive=False)
+)
+@click.option("--group", type=str, required=True, help="wandb group")
+@click.option("--name", type=str, required=True, help="wandb name")
+@click.option(
+    "--apply_pca",
+    type=bool,
+    required=False,
+    default=True,
+    help="Whether or not to apply PCA Augmentation",
 )
 @click.option(
-    "--val_dir", type=str, required=True, help="Path to validation set directory"
+    "--imagenet_pca",
+    type=bool,
+    required=False,
+    default=True,
+    help=(
+        "Whether or not to use pre-computed principal components from the "
+        + "whole of ImageNet"
+    ),
 )
-@click.option(
-    "--train_num_samples",
-    type=int,
-    required=True,
-    help="Number of samples in training set",
-)
-@click.option(
-    "--val_num_samples",
-    type=int,
-    required=True,
-    help="Number of samples in validation set",
-)
-@click.option("--tag", type=str, required=True, help="wandb tag")
-def train(train_dir, val_dir, train_num_samples, val_num_samples, tag):
-    wandb.init(project="computer-vision-papers", tags=[tag])
+def train(dataset: str, group: str, name: str, apply_pca: bool, imagenet_pca: bool):
+    wandb.init(project="computer-vision-papers", group=group, name=name, tags=[dataset])
 
-    train_dir = pathlib.Path(train_dir)
-    val_dir = pathlib.Path(train_dir)
+    ds_config = get_dataset_config(dataset)
+    train_dir = ds_config["train"]["path"]
+    val_dir = ds_config["val"]["path"]
+    train_samples = ds_config["train"]["samples"]
+    val_samples = ds_config["val"]["samples"]
 
     BATCH_SIZE = 128
     CLASS_NAMES = np.array([item.name for item in train_dir.glob("*")])
-    train_ds = build_dataset(train_dir, train_num_samples, BATCH_SIZE, CLASS_NAMES)
-    val_ds = build_dataset(val_dir, val_num_samples, BATCH_SIZE, CLASS_NAMES)
+    train_ds = build_dataset(
+        train_dir, train_samples, BATCH_SIZE, CLASS_NAMES, apply_pca, imagenet_pca
+    )
+    val_ds = build_dataset(
+        val_dir, val_samples, BATCH_SIZE, CLASS_NAMES, apply_pca, imagenet_pca
+    )
 
-    base_dir = ".\\models\\alexnet"
+    base_dir = f".\\models\\alexnet\\{dataset}\\{group}\\{name}"
     last_model_checkpoint = get_last_model_checkpoint(base_dir)
     best_model_checkpoint = get_best_model_checkpoint(base_dir)
     last_model_manager = LastModelManager(base_dir)
@@ -115,9 +135,9 @@ def train(train_dir, val_dir, train_num_samples, val_num_samples, tag):
         train_ds,
         epochs=90,
         initial_epoch=initial_epoch,
-        steps_per_epoch=train_num_samples // BATCH_SIZE,
+        steps_per_epoch=train_samples // BATCH_SIZE,
         validation_data=val_ds,
-        validation_steps=val_num_samples // BATCH_SIZE,
+        validation_steps=val_samples // BATCH_SIZE,
         callbacks=[
             scheduler,
             last_model_checkpoint,
