@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from src.utilities.math import cov
+from src.utilities.math import cov_tf
 
 # https://github.com/eladhoffer/convNet.pytorch/blob/master/preprocess.py
 _IMAGENET_PCA = {
@@ -49,7 +49,7 @@ def fancy_pca(
         lambdas = _IMAGENET_PCA["eigval"]
         p = _IMAGENET_PCA["eigvec"]
     else:
-        covariance = cov(img)
+        covariance = cov_tf(img)
         lambdas, p, _ = tf.linalg.svd(covariance)
 
     alphas = tf.random.normal((3,), 0, alpha_std)
