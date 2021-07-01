@@ -16,9 +16,7 @@ _IMAGENET_PCA = {
 }
 
 
-def fancy_pca(
-    img: tf.Tensor, imagenet_pca: bool = False, alpha_std: float = 0.1
-) -> tf.Tensor:
+def fancy_pca(img: tf.Tensor) -> tf.Tensor:
 
     """PCA Colour Augmentation as described in AlexNet paper.
 
@@ -45,14 +43,10 @@ def fancy_pca(
     img -= mean
     img /= std
 
-    if imagenet_pca:
-        lambdas = _IMAGENET_PCA["eigval"]
-        p = _IMAGENET_PCA["eigvec"]
-    else:
-        covariance = cov_tf(img)
-        lambdas, p, _ = tf.linalg.svd(covariance)
+    covariance = cov_tf(img)
+    lambdas, p, _ = tf.linalg.svd(covariance)
 
-    alphas = tf.random.normal((3,), 0, alpha_std)
+    alphas = tf.random.normal((3,), 0, 0.1)
     delta = tf.tensordot(p, alphas * lambdas, axes=1)
 
     img = img + delta
