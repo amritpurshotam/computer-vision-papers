@@ -1,6 +1,6 @@
-click==8.0.1
-matplotlib==3.4.2
+click==7.1.2
+matplotlib==3.4.1
 numpy==1.19.2
-tensorflow==2.5.0
-tensorflow-datasets==4.3.0
-wandb==0.10.32
+tensorflow==2.4.1
+tensorflow-datasets==4.2.0
+wandb==0.10.24

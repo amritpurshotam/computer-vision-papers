@@ -11,20 +11,9 @@ class LeNet5(Sequential):
 
     def __init__(self):
         super().__init__()
-        self.add(
-            Conv2D(
-                6,
-                kernel_size=5,
-                strides=1,
-                activation="tanh",
-                padding="same",
-                input_shape=(28, 28, 1),
-            )
-        )
+        self.add(Conv2D(6, kernel_size=5, strides=1, activation="tanh", padding="same", input_shape=(28, 28, 1),))
         self.add(AveragePooling2D(pool_size=(2, 2), strides=1, padding="valid"))
-        self.add(
-            Conv2D(16, kernel_size=5, strides=1, activation="tanh", padding="valid")
-        )
+        self.add(Conv2D(16, kernel_size=5, strides=1, activation="tanh", padding="valid"))
         self.add(AveragePooling2D(pool_size=(2, 2), strides=2, padding="valid"))
         self.add(Flatten())
         self.add(Dense(120, activation="tanh"))
@@ -32,6 +21,4 @@ class LeNet5(Sequential):
         self.add(Dense(10, activation="softmax"))  # paper used euclidean RBF activation
 
         # need to check optimizer used in paper? SGD? learning rate?
-        self.compile(
-            optimizer="adam", loss=categorical_crossentropy, metrics=["accuracy"]
-        )
+        self.compile(optimizer="adam", loss=categorical_crossentropy, metrics=["accuracy"])
