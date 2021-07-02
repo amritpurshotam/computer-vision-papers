@@ -1,5 +1,4 @@
 import os
-import pathlib
 from pathlib import Path
 
 import click
@@ -11,6 +10,7 @@ from wandb.keras import WandbCallback
 
 from src.callbacks.helper import get_best_model_checkpoint, get_last_model_checkpoint
 from src.callbacks.last_model_manager import LastModelManager, get_latest_trained_model
+from src.config import get_dataset_config
 from src.models.alexnet.model import get_alexnet_model
 from src.utilities.image import (
     crop_center,
@@ -69,36 +69,25 @@ def build_dataset(
 
 @click.command()
 @click.option(
-    "--train_dir", type=str, required=True, help="Path to training set directory"
+    "--dataset", type=click.Choice(["imagenet", "imagenette"], case_sensitive=False)
 )
-@click.option(
-    "--val_dir", type=str, required=True, help="Path to validation set directory"
-)
-@click.option(
-    "--train_num_samples",
-    type=int,
-    required=True,
-    help="Number of samples in training set",
-)
-@click.option(
-    "--val_num_samples",
-    type=int,
-    required=True,
-    help="Number of samples in validation set",
-)
-@click.option("--tag", type=str, required=True, help="wandb tag")
-def train(train_dir, val_dir, train_num_samples, val_num_samples, tag):
-    wandb.init(project="computer-vision-papers", tags=[tag])
+@click.option("--group", type=str, required=True, help="wandb group")
+@click.option("--name", type=str, required=True, help="wandb name")
+def train(dataset: str, group: str, name: str):
+    wandb.init(project="computer-vision-papers", tags=[dataset])
 
-    train_dir = pathlib.Path(train_dir)
-    val_dir = pathlib.Path(train_dir)
+    ds_config = get_dataset_config(dataset)
+    train_dir = ds_config["train"]["path"]
+    val_dir = ds_config["val"]["path"]
+    train_samples = ds_config["train"]["samples"]
+    val_samples = ds_config["val"]["samples"]
 
     BATCH_SIZE = 128
     CLASS_NAMES = np.array([item.name for item in train_dir.glob("*")])
-    train_ds = build_dataset(train_dir, train_num_samples, BATCH_SIZE, CLASS_NAMES)
-    val_ds = build_dataset(val_dir, val_num_samples, BATCH_SIZE, CLASS_NAMES)
+    train_ds = build_dataset(train_dir, train_samples, BATCH_SIZE, CLASS_NAMES)
+    val_ds = build_dataset(val_dir, val_samples, BATCH_SIZE, CLASS_NAMES)
 
-    base_dir = ".\\models\\alexnet"
+    base_dir = f".\\models\\alexnet\\{dataset}\\{group}\\{name}"
     last_model_checkpoint = get_last_model_checkpoint(base_dir)
     best_model_checkpoint = get_best_model_checkpoint(base_dir)
     last_model_manager = LastModelManager(base_dir)
@@ -115,9 +104,9 @@ def train(train_dir, val_dir, train_num_samples, val_num_samples, tag):
         train_ds,
         epochs=90,
         initial_epoch=initial_epoch,
-        steps_per_epoch=train_num_samples // BATCH_SIZE,
+        steps_per_epoch=train_samples // BATCH_SIZE,
         validation_data=val_ds,
-        validation_steps=val_num_samples // BATCH_SIZE,
+        validation_steps=val_samples // BATCH_SIZE,
         callbacks=[
             scheduler,
             last_model_checkpoint,
