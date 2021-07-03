@@ -98,7 +98,7 @@ def build_dataset(
     "--imagenet_pca",
     type=bool,
     required=False,
-    default=True,
+    default=False,
     help=(
         "Whether or not to use pre-computed principal components from the "
         + "whole of ImageNet"
