@@ -74,7 +74,7 @@ def build_dataset(
 @click.option("--group", type=str, required=True, help="wandb group")
 @click.option("--name", type=str, required=True, help="wandb name")
 def train(dataset: str, group: str, name: str):
-    wandb.init(project="computer-vision-papers", group=group, name=name, tags=[dataset])
+    wandb.init(project="computer-vision-papers", tags=[dataset])
 
     ds_config = get_dataset_config(dataset)
     train_dir = ds_config["train"]["path"]
