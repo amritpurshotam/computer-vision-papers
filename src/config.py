@@ -1,11 +1,10 @@
 import json
 import pathlib
 
-with open("config.json", "r") as f:
-    config = json.load(f)
-
 
 def get_dataset_config(dataset: str):
+    with open("config.json", "r") as f:
+        config = json.load(f)
 
     if dataset == "imagenet":
         ds_config = config[dataset]

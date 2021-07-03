@@ -10,7 +10,7 @@ from wandb.keras import WandbCallback
 
 from src.callbacks.helper import get_best_model_checkpoint, get_last_model_checkpoint
 from src.callbacks.last_model_manager import LastModelManager, get_latest_trained_model
-from src.dataset import get_dataset_config
+from src.config import get_dataset_config
 from src.models.alexnet.model import get_alexnet_model
 from src.utilities.image import (
     crop_center,
@@ -81,8 +81,12 @@ def build_dataset(
 @click.option(
     "--dataset", type=click.Choice(["imagenet", "imagenette"], case_sensitive=False)
 )
-@click.option("--group", type=str, required=True, help="wandb group")
-@click.option("--name", type=str, required=True, help="wandb name")
+@click.option(
+    "--group", type=str, required=True, help="What to organise this experiment under"
+)
+@click.option(
+    "--name", type=str, required=True, help="The name of this specific experiment"
+)
 @click.option(
     "--apply_pca",
     type=bool,
