@@ -49,7 +49,7 @@ def fancy_pca(
         lambdas = _IMAGENET_PCA["eigval"]
         p = _IMAGENET_PCA["eigvec"]
     else:
-        covariance = cov(img)
+        covariance = cov(img, rowvar=False, bias=True)
         lambdas, p, _ = tf.linalg.svd(covariance)
 
     alphas = tf.random.normal((3,), 0, alpha_std)

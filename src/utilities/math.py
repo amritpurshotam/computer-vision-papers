@@ -1,10 +1,9 @@
 import tensorflow as tf
 
 
-def cov(m: tf.Tensor, rowvar: bool = False) -> tf.Tensor:
+def cov(m: tf.Tensor, rowvar: bool = True, bias: bool = False) -> tf.Tensor:
     """Estimate a covariance matrix.
-    Mimics the behaviour of `np.cov(m)` with default parameters i.e. `bias=False`
-    and `rowvar=True`.
+    Mimics the behaviour of `np.cov(m)`
 
     Parameters
     ----------
@@ -25,11 +24,11 @@ def cov(m: tf.Tensor, rowvar: bool = False) -> tf.Tensor:
     """
     if rowvar:
         m = m - tf.reduce_mean(m, axis=1, keepdims=True)
-        normalization_factor = tf.cast(tf.shape(m)[1] - 1, tf.float32)
-        covariance = tf.matmul(m, tf.transpose(m)) / normalization_factor
+        n = tf.shape(m)[1] if bias else tf.shape(m)[1] - 1
+        covariance = tf.matmul(m, tf.transpose(m)) / tf.cast(n, tf.float32)
         return covariance
     else:
         m = m - tf.reduce_mean(m, axis=0, keepdims=True)
-        normalization_factor = tf.cast(tf.shape(m)[0] - 1, tf.float32)
-        covariance = tf.matmul(tf.transpose(m), m) / normalization_factor
+        n = tf.shape(m)[0] if bias else tf.shape(m)[0] - 1
+        covariance = tf.matmul(tf.transpose(m), m) / tf.cast(n, tf.float32)
         return covariance
