@@ -2,6 +2,7 @@ from tensorflow.keras import Sequential
 from tensorflow.keras.initializers import RandomNormal
 from tensorflow.keras.layers import Conv2D, Dense, Dropout, Flatten, MaxPool2D
 from tensorflow.keras.losses import categorical_crossentropy
+from tensorflow.keras.metrics import TopKCategoricalAccuracy
 from tensorflow.keras.optimizers import SGD
 
 from src.layers.local_response_normalisation import LocalResponseNormalization
@@ -87,7 +88,9 @@ def get_alexnet_model(num_class: int) -> Sequential:
 
     optimizer = SGD(learning_rate=0.01, momentum=0.9, decay=0.0005)
     model.compile(
-        optimizer=optimizer, loss=categorical_crossentropy, metrics=["accuracy"]
+        optimizer=optimizer,
+        loss=categorical_crossentropy,
+        metrics=["accuracy", TopKCategoricalAccuracy(k=5)],
     )
 
     return model
