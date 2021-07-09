@@ -3,4 +3,4 @@ matplotlib==3.4.2
 numpy==1.19.2
 tensorflow==2.5.0
 tensorflow-datasets==4.3.0
-wandb==0.10.32
+wandb==0.10.33

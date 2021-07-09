@@ -19,7 +19,7 @@ setup(
             "flake8-bugbear==21.4.3",
             "flake8-builtins==1.5.3",
             "flake8-comprehensions==3.5.0",
-            "isort==5.8.0",
+            "isort==5.9.2",
             "mypy==0.902",
             "rope==0.19.0",
             "tensorboard-plugin-profile==2.4.0",
