@@ -69,10 +69,10 @@ def build_dataset(
             lambda file_path: process_path(
                 file_path, class_names, apply_pca, imagenet_pca
             ),
-            num_parallel_calls=tf.data.experimental.AUTOTUNE,
+            num_parallel_calls=tf.data.AUTOTUNE,
         )
         .batch(batch_size)
-        .prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+        .prefetch(buffer_size=tf.data.AUTOTUNE)
     )
     return ds
 
