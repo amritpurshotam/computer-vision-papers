@@ -1,20 +1,4 @@
 python src\models\alexnet\train.py ^
---dataset="imagenette" ^
---group="alexnet_pca" ^
---name="baseline_no_pca" ^
---apply_pca=False
-
-python src\models\alexnet\train.py ^
---dataset="imagenette" ^
---group="alexnet_pca" ^
---name="pca_per_image" ^
---apply_pca=True ^
---imagenet_pca=False
-
-python src\models\alexnet\train.py ^
---dataset="imagenette" ^
---group="alexnet_pca" ^
---name="imagenet_pca" ^
---apply_pca=True ^
---imagenet_pca=True
-
+--dataset="imagenet" ^
+--group="main" ^
+--name="alexnet"
