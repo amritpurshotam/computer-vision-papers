@@ -5,7 +5,7 @@ from tensorflow.keras.callbacks import ModelCheckpoint
 
 def get_last_model_checkpoint(base_dir: str) -> ModelCheckpoint:
     last_model_checkpoint = ModelCheckpoint(
-        filepath=os.path.join(base_dir, "last_model_{epoch:02d}-{val_accuracy:.2f}"),
+        filepath=os.path.join(base_dir, "last_model"),
         save_best_only=False,
         save_weights_only=False,
         save_freq="epoch",
