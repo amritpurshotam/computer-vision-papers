@@ -151,6 +151,8 @@ def train(dataset: str, group: str, name: str, apply_pca: bool, imagenet_pca: bo
         ],
     )
 
+    model.save(f".\\models\\alexnet\\{dataset}\\alexnet_final")
+
 
 if __name__ == "__main__":
     train()
