@@ -8,8 +8,7 @@ import wandb
 from tensorflow.keras.callbacks import ReduceLROnPlateau
 from wandb.keras import WandbCallback
 
-from src.callbacks.helper import get_best_model_checkpoint, get_last_model_checkpoint
-from src.callbacks.last_model_manager import LastModelManager, get_latest_trained_model
+from src.callbacks.last_model_manager import get_latest_trained_model
 from src.config import get_dataset_config
 from src.models.alexnet.model import get_alexnet_model
 from src.utilities.image import (
