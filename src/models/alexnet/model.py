@@ -4,6 +4,7 @@ from tensorflow.keras.layers import Conv2D, Dense, Dropout, Flatten, MaxPool2D
 from tensorflow.keras.losses import categorical_crossentropy
 from tensorflow.keras.metrics import TopKCategoricalAccuracy
 from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.regularizers import L2
 
 from src.layers.local_response_normalisation import LocalResponseNormalization
 
@@ -19,6 +20,7 @@ def get_alexnet_model(num_class: int) -> Sequential:
                 activation="relu",
                 kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                 bias_initializer="zeros",
+                kernel_regularizer=L2(l2=0.0005),
                 input_shape=(224, 224, 3),
             ),
             LocalResponseNormalization(),
@@ -31,6 +33,7 @@ def get_alexnet_model(num_class: int) -> Sequential:
                 activation="relu",
                 kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                 bias_initializer="ones",
+                kernel_regularizer=L2(l2=0.0005),
             ),
             LocalResponseNormalization(),
             MaxPool2D(pool_size=3, strides=2, padding="valid"),
@@ -42,6 +45,7 @@ def get_alexnet_model(num_class: int) -> Sequential:
                 activation="relu",
                 kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                 bias_initializer="zeros",
+                kernel_regularizer=L2(l2=0.0005),
             ),
             Conv2D(
                 384,
@@ -51,6 +55,7 @@ def get_alexnet_model(num_class: int) -> Sequential:
                 activation="relu",
                 kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                 bias_initializer="ones",
+                kernel_regularizer=L2(l2=0.0005),
             ),
             Conv2D(
                 256,
@@ -60,6 +65,7 @@ def get_alexnet_model(num_class: int) -> Sequential:
                 activation="relu",
                 kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                 bias_initializer="ones",
+                kernel_regularizer=L2(l2=0.0005),
             ),
             MaxPool2D(pool_size=3, strides=2, padding="valid"),
             Flatten(),
@@ -68,6 +74,7 @@ def get_alexnet_model(num_class: int) -> Sequential:
                 activation="relu",
                 kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                 bias_initializer="ones",
+                kernel_regularizer=L2(l2=0.0005),
             ),
             Dropout(0.5),
             Dense(
@@ -75,6 +82,7 @@ def get_alexnet_model(num_class: int) -> Sequential:
                 activation="relu",
                 kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                 bias_initializer="ones",
+                kernel_regularizer=L2(l2=0.0005),
             ),
             Dropout(0.5),
             Dense(
@@ -82,11 +90,12 @@ def get_alexnet_model(num_class: int) -> Sequential:
                 activation="softmax",
                 kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                 bias_initializer="zeros",
+                kernel_regularizer=L2(l2=0.0005),
             ),
         ]
     )
 
-    optimizer = SGD(learning_rate=0.01, momentum=0.9, decay=0.0005)
+    optimizer = SGD(learning_rate=0.01, momentum=0.9)
     model.compile(
         optimizer=optimizer,
         loss=categorical_crossentropy,
