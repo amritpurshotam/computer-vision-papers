@@ -8,8 +8,7 @@ import wandb
 from tensorflow.keras.callbacks import ReduceLROnPlateau
 from wandb.keras import WandbCallback
 
-from src.callbacks.helper import get_best_model_checkpoint, get_last_model_checkpoint
-from src.callbacks.last_model_manager import LastModelManager, get_latest_trained_model
+from src.callbacks.helper import get_best_model_checkpoint
 from src.config import get_dataset_config
 from src.models.alexnet.model import get_alexnet_model
 from src.utilities.image import (
@@ -123,13 +122,10 @@ def train(dataset: str, group: str, name: str, apply_pca: bool, imagenet_pca: bo
     )
 
     base_dir = f".\\models\\alexnet\\{dataset}\\{group}\\{name}"
-    last_model_checkpoint = get_last_model_checkpoint(base_dir)
     best_model_checkpoint = get_best_model_checkpoint(base_dir)
-    last_model_manager = LastModelManager(base_dir)
 
     num_classes = CLASS_NAMES.shape[0]
     model = get_alexnet_model(num_classes)
-    model, initial_epoch = get_latest_trained_model(model, base_dir)
 
     scheduler = ReduceLROnPlateau(
         monitor="val_loss", factor=0.1, patience=10, min_lr=0.00001
@@ -138,15 +134,12 @@ def train(dataset: str, group: str, name: str, apply_pca: bool, imagenet_pca: bo
     model.fit(
         train_ds,
         epochs=90,
-        initial_epoch=initial_epoch,
         steps_per_epoch=train_samples // BATCH_SIZE,
         validation_data=val_ds,
         validation_steps=val_samples // BATCH_SIZE,
         callbacks=[
             scheduler,
-            last_model_checkpoint,
             best_model_checkpoint,
-            last_model_manager,
             WandbCallback(save_model=False),
         ],
     )
