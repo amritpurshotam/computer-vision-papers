@@ -128,7 +128,12 @@ def train(dataset: str, group: str, name: str, apply_pca: bool, imagenet_pca: bo
     model = get_alexnet_model(num_classes)
 
     scheduler = ReduceLROnPlateau(
-        monitor="val_loss", factor=0.1, patience=10, min_lr=0.00001
+        monitor="val_accuracy",
+        factor=0.1,
+        patience=3,
+        mode="max",
+        min_lr=0.00001,
+        min_delta=-0.001,
     )
 
     model.fit(
