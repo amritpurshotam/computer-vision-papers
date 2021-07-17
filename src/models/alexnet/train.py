@@ -133,8 +133,8 @@ def train(dataset: str, group: str, name: str, apply_pca: bool, imagenet_pca: bo
         patience=3,
         mode="max",
         min_lr=0.00001,
-        min_delta=0.01,
-        cooldown=5,
+        min_delta=0.0001,
+        cooldown=2,
     )
 
     model.fit(
