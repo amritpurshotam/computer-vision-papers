@@ -130,16 +130,14 @@ def train(dataset: str, group: str, name: str, apply_pca: bool, imagenet_pca: bo
     scheduler = ReduceLROnPlateau(
         monitor="val_accuracy",
         factor=0.1,
-        patience=3,
         mode="max",
         min_lr=0.00001,
         min_delta=0.0001,
-        cooldown=2,
     )
 
     model.fit(
         train_ds,
-        epochs=90,
+        epochs=120,
         steps_per_epoch=train_samples // BATCH_SIZE,
         validation_data=val_ds,
         validation_steps=val_samples // BATCH_SIZE,
