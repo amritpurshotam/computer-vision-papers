@@ -9,7 +9,7 @@ from tensorflow.keras.layers import (
     MaxPool2D,
 )
 from tensorflow.keras.losses import categorical_crossentropy
-from tensorflow.keras.metrics import TopKCategoricalAccuracy
+from tensorflow.keras.metrics import Accuracy, TopKCategoricalAccuracy
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.regularizers import L2
@@ -25,6 +25,7 @@ def get_alexnet_model(num_class: int) -> Sequential:
         kernel_size=11,
         strides=4,
         padding="valid",
+        activation="relu",
         kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
         bias_initializer="zeros",
         kernel_regularizer=L2(l2=0.0005),
@@ -50,6 +51,7 @@ def get_alexnet_model(num_class: int) -> Sequential:
         kernel_size=11,
         strides=4,
         padding="valid",
+        activation="relu",
         kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
         bias_initializer="zeros",
         kernel_regularizer=L2(l2=0.0005),
@@ -170,7 +172,7 @@ def get_alexnet_model(num_class: int) -> Sequential:
     model.compile(
         optimizer=optimizer,
         loss=categorical_crossentropy,
-        metrics=["accuracy", TopKCategoricalAccuracy(k=5)],
+        metrics=[Accuracy, TopKCategoricalAccuracy(k=5)],
     )
 
     return model
