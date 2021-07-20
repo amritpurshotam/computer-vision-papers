@@ -18,13 +18,13 @@ from src.layers.local_response_normalisation import LocalResponseNormalization
 
 
 def get_alexnet_model(num_class: int) -> Sequential:
-    image_input = Input((224, 224, 3), dtype="float32", name="image")
+    image_input = Input((227, 227, 3), dtype="float32", name="image")
 
     c1_top = Conv2D(
         filters=48,
         kernel_size=11,
         strides=4,
-        padding="same",
+        padding="valid",
         kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
         bias_initializer="zeros",
         kernel_regularizer=L2(l2=0.0005),
@@ -49,7 +49,7 @@ def get_alexnet_model(num_class: int) -> Sequential:
         filters=48,
         kernel_size=11,
         strides=4,
-        padding="same",
+        padding="valid",
         kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
         bias_initializer="zeros",
         kernel_regularizer=L2(l2=0.0005),
