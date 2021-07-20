@@ -33,7 +33,7 @@ def decode_image(img_path):
 def augment(img: tf.Tensor, apply_pca: bool, imagenet_pca: bool):
     img = resize_image_keep_aspect_ratio(img)
     img = crop_center(img)
-    img = tf.image.random_crop(img, size=[224, 224, 3])
+    img = tf.image.random_crop(img, size=[227, 227, 3])
     img = tf.image.random_flip_left_right(img)
     if apply_pca:
         img = fancy_pca(img, imagenet_pca)
