@@ -9,7 +9,7 @@ from tensorflow.keras.layers import (
     MaxPool2D,
 )
 from tensorflow.keras.losses import categorical_crossentropy
-from tensorflow.keras.metrics import Accuracy, TopKCategoricalAccuracy
+from tensorflow.keras.metrics import TopKCategoricalAccuracy
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.regularizers import L2
