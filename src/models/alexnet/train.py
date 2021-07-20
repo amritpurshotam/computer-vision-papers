@@ -131,6 +131,7 @@ def train(dataset: str, group: str, name: str, apply_pca: bool, imagenet_pca: bo
         monitor="val_accuracy",
         factor=0.1,
         mode="max",
+        patience=8,
         min_lr=0.00001,
         min_delta=0.0001,
     )
