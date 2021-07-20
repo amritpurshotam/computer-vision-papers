@@ -185,7 +185,7 @@ def get_alexnet_model(num_class: int) -> Sequential:
     model.compile(
         optimizer=optimizer,
         loss=categorical_crossentropy,
-        metrics=[Accuracy(), TopKCategoricalAccuracy(k=5)],
+        metrics=["accuracy", TopKCategoricalAccuracy(k=5)],
     )
 
     return model
