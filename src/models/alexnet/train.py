@@ -145,7 +145,12 @@ def train(dataset: str, group: str, name: str, apply_pca: bool, imagenet_pca: bo
         callbacks=[
             scheduler,
             best_model_checkpoint,
-            WandbCallback(save_model=False, log_weights=True, log_gradients=True),
+            WandbCallback(
+                save_model=False,
+                log_weights=True,
+                log_gradients=True,
+                training_data=train_ds,
+            ),
         ],
     )
 
