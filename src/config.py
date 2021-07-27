@@ -2,8 +2,8 @@ import json
 import pathlib
 
 
-def get_dataset_config(dataset: str):
-    with open("config.json", "r") as f:
+def get_dataset_config(dataset: str, config_path: str = "config.json"):
+    with open(config_path, "r") as f:
         config = json.load(f)
 
     if dataset == "imagenet":
