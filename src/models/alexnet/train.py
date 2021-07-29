@@ -62,7 +62,6 @@ def build_dataset(
     #  repeat -> shuffle -> map -> batch -> batch-wise map -> prefetch
     ds = (
         tf.data.Dataset.list_files(str(data_dir / "*/*"))
-        .repeat()
         .shuffle(num_samples)
         .map(
             lambda file_path: process_path(
@@ -138,10 +137,8 @@ def train(dataset: str, group: str, name: str, apply_pca: bool, imagenet_pca: bo
 
     model.fit(
         train_ds,
-        epochs=120,
-        steps_per_epoch=train_samples // BATCH_SIZE,
+        epochs=90,
         validation_data=val_ds,
-        validation_steps=val_samples // BATCH_SIZE,
         callbacks=[
             scheduler,
             best_model_checkpoint,
