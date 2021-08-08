@@ -33,7 +33,7 @@ def decode_image(img_path):
 def augment(img: tf.Tensor, apply_pca: bool, imagenet_pca: bool):
     img = resize_image_keep_aspect_ratio(img)
     img = crop_center(img)
-    img = tf.image.random_crop(img, size=[224, 224, 3])
+    img = tf.image.random_crop(img, size=[227, 227, 3])
     img = tf.image.random_flip_left_right(img)
     if apply_pca:
         img = fancy_pca(img, imagenet_pca)
@@ -62,7 +62,6 @@ def build_dataset(
     #  repeat -> shuffle -> map -> batch -> batch-wise map -> prefetch
     ds = (
         tf.data.Dataset.list_files(str(data_dir / "*/*"))
-        .repeat()
         .shuffle(num_samples)
         .map(
             lambda file_path: process_path(
@@ -131,20 +130,24 @@ def train(dataset: str, group: str, name: str, apply_pca: bool, imagenet_pca: bo
         monitor="val_accuracy",
         factor=0.1,
         mode="max",
+        patience=8,
         min_lr=0.00001,
         min_delta=0.0001,
     )
 
     model.fit(
         train_ds,
-        epochs=120,
-        steps_per_epoch=train_samples // BATCH_SIZE,
+        epochs=90,
         validation_data=val_ds,
-        validation_steps=val_samples // BATCH_SIZE,
         callbacks=[
             scheduler,
             best_model_checkpoint,
-            WandbCallback(save_model=False),
+            WandbCallback(
+                save_model=False,
+                log_weights=True,
+                log_gradients=True,
+                training_data=train_ds,
+            ),
         ],
     )
 
