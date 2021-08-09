@@ -38,7 +38,6 @@ def fancy_pca(
     """
     rows, columns, _ = img.shape
     img = tf.reshape(img, (rows * columns, 3))
-    img = tf.cast(img, "float32")
 
     mean = tf.reduce_mean(img, axis=0)
     std = tf.math.reduce_std(img, axis=0)
@@ -58,7 +57,6 @@ def fancy_pca(
     img = img + delta
     img = img * std + mean
     img = tf.clip_by_value(img, 0, 255)
-    img = tf.cast(img, dtype=tf.uint8)
 
     img = tf.reshape(img, (rows, columns, 3))
     return img
@@ -84,7 +82,6 @@ def resize_image_keep_aspect_ratio(image, lo_dim=256):
     )
 
     image = tf.image.resize(image, [new_width, new_height])
-    image = tf.cast(image, dtype=tf.uint8)
     return image
 
 
