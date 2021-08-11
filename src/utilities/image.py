@@ -100,8 +100,28 @@ def crop_center(image):
     return cropped
 
 
-def subtract_mean(image):
-    mean = tf.constant([121.64567695, 115.7963513, 101.6740183], dtype=tf.float32)
+def subtract_mean(image: tf.Tensor) -> tf.Tensor:
+    """Centers image pixel values per colour channel based on means from ImageNet.
+
+    Parameters
+    ----------
+    image : tf.Tensor
+        RGB image tensor with shape (h, w, 3) and pixel values already scaled to [0, 1]
+
+    Returns
+    -------
+    tf.Tensor
+        Centererd RGB image tensor
+
+    Raises
+    ------
+    ValueError
+        Raised if pixel values outside the range of [0,1]
+    """
+    if tf.reduce_min(image) < 0 or tf.reduce_max(image) > 1:
+        raise ValueError("Image must have pixel values scaled to between [0,1]")
+
+    mean = tf.constant([0.48105074, 0.4574233, 0.40778521], dtype=tf.float32)
     mean = tf.reshape(mean, [1, 1, 3])
     image = tf.math.subtract(image, mean)
     return image
