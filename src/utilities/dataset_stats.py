@@ -1,41 +1,50 @@
-import pathlib
+from pathlib import Path
 
 import numpy as np
-import tensorflow as tf
+from PIL import Image
 
-from src.utilities.image import crop_center, resize_image_keep_aspect_ratio
+from src.config import get_dataset_config
 
 
-def process(image_path):
-    image = tf.io.read_file(image_path)
-    image = tf.image.decode_jpeg(image, channels=3)
-    image = resize_image_keep_aspect_ratio(image)
-    image = crop_center(image)
-    image = tf.image.convert_image_dtype(image, tf.float32)
+def process(image_path: Path) -> np.ndarray:
+    image = Image.open(image_path, formats=["JPEG"])
+    if image.mode == "CMYK" or image.mode == "L":
+        image = image.convert("RGB")
+    elif image.mode != "RGB":
+        print(f"{image.mode}: {image_path}")
+    image = np.asarray(image)
+    image = image.astype(np.float32)
+    image = image / 255.0
     return image
 
 
 if __name__ == "__main__":
-    batch_size = 1000
-    num_images = 1281167
-    data_dir = pathlib.Path("F:\\ILSVRC2012_img_train")
-    dataset = tf.data.Dataset.list_files(str(data_dir / "*/*"))
-    dataset = (
-        dataset.map(process, num_parallel_calls=tf.data.experimental.AUTOTUNE)
-        .batch(batch_size)
-        .prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
-    )
+    ds_config = get_dataset_config("imagenet")
+    train_dir = ds_config["train"]["path"]
+    num_images = ds_config["train"]["samples"]
 
+    image_paths = train_dir.glob("*/*")
     means = np.zeros((num_images, 3))
+    stds = np.zeros((num_images, 3))
     i = 0
-    for batch in iter(dataset):
-        batch_mean = tf.math.reduce_mean(batch, axis=(1, 2)).numpy()
-        i_end = i + batch_size if i + batch_size <= num_images else num_images
-        means[i:i_end] = batch_mean
-        i = i + batch_size
+    for image_path in iter(image_paths):
+        try:
+            image = process(image_path)
+            mean = np.mean(image, axis=(0, 1))
+            std = np.std(image, axis=(0, 1))
+            means[i] = mean
+            stds[i] = std
+            i = i + 1
+        except Exception as e:
+            print(image_path)
+            print(e)
     ds_means = np.mean(means, axis=0)
+    ds_stds = np.mean(stds, axis=0)
 
+    print(ds_means.shape)
+    print(ds_stds.shape)
+
+    print("Dataset means")
     print(ds_means)
-
-    # [0.47900404 0.4560645  0.40068299]
-    # [121.64567695 115.7963513  101.6740183 ]
+    print("Dataset standard deviations")
+    print(ds_stds)
