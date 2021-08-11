@@ -100,6 +100,11 @@ def crop_center(image):
     return cropped
 
 
+def is_scaled(image: tf.Tensor) -> bool:
+    """Checks if an image is scaled to between 0 and 1"""
+    return tf.reduce_min(image) < 0 or tf.reduce_max(image) > 1
+
+
 def subtract_mean(image: tf.Tensor) -> tf.Tensor:
     """Centers image pixel values per colour channel based on means from ImageNet.
 
@@ -118,10 +123,62 @@ def subtract_mean(image: tf.Tensor) -> tf.Tensor:
     ValueError
         Raised if pixel values outside the range of [0,1]
     """
-    if tf.reduce_min(image) < 0 or tf.reduce_max(image) > 1:
+    if not is_scaled(image):
         raise ValueError("Image must have pixel values scaled to between [0,1]")
 
     mean = tf.constant([0.48105074, 0.4574233, 0.40778521], dtype=tf.float32)
     mean = tf.reshape(mean, [1, 1, 3])
     image = tf.math.subtract(image, mean)
+    return image
+
+
+def standardise(image: tf.Tensor) -> tf.Tensor:
+    """Standardises image pixel values per colour channel based on standard deviation
+    from ImageNet.
+
+    Parameters
+    ----------
+    image : tf.Tensor
+        RGB image tensor with shape (h, w, 3) and pixel values already scaled to [0, 1]
+
+    Returns
+    -------
+    tf.Tensor
+        Standardised RGB image tensor
+
+    Raises
+    ------
+    ValueError
+        Raised if pixel values outside the range of [0,1]
+    """
+    if not is_scaled(image):
+        raise ValueError("Image must have pixel values scaled to between [0,1]")
+
+    std = tf.constant([[0.23343627, 0.2294029, 0.23018423]], dtype=tf.float32)
+    std = tf.reshape(std, [1, 1, 3])
+    image = tf.math.divide(image, std)
+    return image
+
+
+def normalise(image: tf.Tensor) -> tf.Tensor:
+    """Normalises image pixel values per colour channel based on means and
+        standard deviation from ImageNet.
+
+    Parameters
+    ----------
+    image : tf.Tensor
+        RGB image tensor with shape (h, w, 3) and pixel values already scaled to [0, 1]
+
+    Returns
+    -------
+    tf.Tensor
+        Normalised RGB image tensor
+
+    Raises
+    ------
+    ValueError
+        Raised if pixel values outside the range of [0,1]
+    """
+    image = subtract_mean(image)
+    image = standardise(image)
     return image
