@@ -24,7 +24,6 @@ setup(
             "rope==0.19.0",
             "tensorboard-plugin-profile==2.5.0",
         ],
-        "hooks": ["pre-commit==2.11.1"],
         "notebook": [
             "ipywidgets==7.6.3",
             "jupyterlab==3.1.2",
