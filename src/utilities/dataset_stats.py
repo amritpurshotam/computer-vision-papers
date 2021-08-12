@@ -95,7 +95,7 @@ def calculate_stats_from_cropped_images(
     "--image_type", type=click.Choice(["full", "cropped"], case_sensitive=False)
 )
 def main(image_type: str):
-    ds_config = get_dataset_config("imagenette")
+    ds_config = get_dataset_config("imagenet")
     train_dir = ds_config["train"]["path"]
     num_images = ds_config["train"]["samples"]
 
