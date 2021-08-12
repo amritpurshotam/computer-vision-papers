@@ -56,13 +56,8 @@ def main(image_type: str):
     if image_type == "full":
         ds_means, ds_stds = calculate_stats_from_full_images(train_dir, num_images)
 
-    print(ds_means.shape)
-    print(ds_stds.shape)
-
-    print("Dataset means")
-    print(ds_means)
-    print("Dataset standard deviations")
-    print(ds_stds)
+    print(f"Per channel means: {ds_means}")
+    print(f"Per channel standard deviations: {ds_stds}")
 
 
 if __name__ == "__main__":
