@@ -6,7 +6,7 @@ import numpy as np
 import tensorflow as tf
 
 from src.utilities.image import (
-    crop_center,
+    crop_center_square,
     fancy_pca,
     resize_image_keep_aspect_ratio,
     subtract_mean,
@@ -48,7 +48,7 @@ class DatasetLoader:
 
     def __resize_and_crop(self, img: tf.Tensor) -> tf.Tensor:
         img = resize_image_keep_aspect_ratio(img)
-        img = crop_center(img)
+        img = crop_center_square(img)
         return img
 
     def __augment(self, img: tf.Tensor) -> tf.Tensor:

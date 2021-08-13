@@ -7,7 +7,7 @@ import tensorflow as tf
 from PIL import Image
 
 from src.config import get_dataset_config
-from src.utilities.image import crop_center, resize_image_keep_aspect_ratio
+from src.utilities.image import crop_center_square, resize_image_keep_aspect_ratio
 
 
 def load_single_image(image_path: Path) -> np.ndarray:
@@ -49,7 +49,7 @@ def load_image_batch(image_path: str):
     image = tf.image.decode_jpeg(image, channels=3)
     image = tf.image.convert_image_dtype(image, tf.float32)
     image = resize_image_keep_aspect_ratio(image, lo_dim=256)
-    image = crop_center(image)  # shape of (256, 256, 3)
+    image = crop_center_square(image)  # shape of (256, 256, 3)
     image = tf.image.central_crop(image, 0.875)  # shape of (224, 224, 3)
     return image
 

@@ -85,7 +85,7 @@ def resize_image_keep_aspect_ratio(image, lo_dim=256):
     return image
 
 
-def crop_center(image):
+def crop_center_square(image):
     """Center crop largest square of image
 
     Code taken from https://stackoverflow.com/a/54866162
