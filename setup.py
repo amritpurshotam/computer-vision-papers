@@ -26,7 +26,7 @@ setup(
         ],
         "notebook": [
             "ipywidgets==7.6.3",
-            "jupyterlab==3.1.2",
+            "jupyterlab==3.1.6",
             "widgetsnbextension==3.5.1",
         ],
         "test": ["pytest==6.2.4"],
