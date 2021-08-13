@@ -126,7 +126,7 @@ def subtract_mean(image: tf.Tensor) -> tf.Tensor:
     if not is_scaled(image):
         raise ValueError("Image must have pixel values scaled to between [0,1]")
 
-    mean = tf.constant([0.48105074, 0.4574233, 0.40778521], dtype=tf.float32)
+    mean = tf.constant([0.48105113, 0.45742367, 0.40778555], dtype=tf.float32)
     mean = tf.reshape(mean, [1, 1, 3])
     image = tf.math.subtract(image, mean)
     return image
@@ -154,7 +154,7 @@ def standardise(image: tf.Tensor) -> tf.Tensor:
     if not is_scaled(image):
         raise ValueError("Image must have pixel values scaled to between [0,1]")
 
-    std = tf.constant([[0.23343627, 0.2294029, 0.23018423]], dtype=tf.float32)
+    std = tf.constant([[0.2334365, 0.22940313, 0.23018445]], dtype=tf.float32)
     std = tf.reshape(std, [1, 1, 3])
     image = tf.math.divide(image, std)
     return image

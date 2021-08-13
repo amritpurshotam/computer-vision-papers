@@ -11,11 +11,9 @@ from src.utilities.image import crop_center, resize_image_keep_aspect_ratio
 
 
 def load_single_image(image_path: Path) -> np.ndarray:
-    image = Image.open(image_path, formats=["JPEG"])
-    if image.mode == "CMYK" or image.mode == "L":
+    image = Image.open(image_path)
+    if image.mode in ["CMYK", "L", "RGBA"]:
         image = image.convert("RGB")
-    elif image.mode != "RGB":
-        print(f"{image.mode}: {image_path}")
     image = np.asarray(image)
     image = image.astype(np.float32)
     image = image / 255.0
