@@ -6,6 +6,7 @@ from wandb.keras import WandbCallback
 from src.callbacks.helper import get_best_model_checkpoint
 from src.config import get_dataset_config
 from src.models.alexnet.dataset_loader import DatasetLoader
+from src.models.alexnet.hyperparams import EPOCHS, LR_DECAY, MIN_LR
 from src.models.alexnet.model import get_alexnet_model
 
 
@@ -59,16 +60,16 @@ def train(dataset: str, group: str, name: str, apply_pca: bool, imagenet_pca: bo
 
     scheduler = ReduceLROnPlateau(
         monitor="val_accuracy",
-        factor=0.1,
+        factor=LR_DECAY,
         mode="max",
         patience=8,
-        min_lr=0.00001,
+        min_lr=MIN_LR,
         min_delta=0.0001,
     )
 
     model.fit(
         train_ds,
-        epochs=90,
+        epochs=EPOCHS,
         validation_data=val_ds,
         callbacks=[
             scheduler,

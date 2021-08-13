@@ -5,6 +5,7 @@ from typing import Tuple
 import numpy as np
 import tensorflow as tf
 
+from src.models.alexnet.hyperparams import BATCH_SIZE, CHANNELS, IMAGE_SIZE
 from src.utilities.image import (
     crop_center_square,
     fancy_pca,
@@ -29,7 +30,7 @@ class DatasetLoader:
         self.val_samples = val_samples
         self.apply_pca = apply_pca
         self.imagenet_pca = imagenet_pca
-        self.batch_size = 128
+        self.batch_size = BATCH_SIZE
         self.class_names = np.array([item.name for item in self.train_dir.glob("*")])
 
     @property
@@ -42,7 +43,7 @@ class DatasetLoader:
 
     def __decode_image(self, img_path: str) -> tf.Tensor:
         img = tf.io.read_file(img_path)
-        img = tf.image.decode_jpeg(img, channels=3)
+        img = tf.image.decode_jpeg(img, channels=CHANNELS)
         img = tf.image.convert_image_dtype(img, tf.float32)
         return img
 
@@ -52,7 +53,7 @@ class DatasetLoader:
         return img
 
     def __augment(self, img: tf.Tensor) -> tf.Tensor:
-        img = tf.image.random_crop(img, size=[227, 227, 3])
+        img = tf.image.random_crop(img, size=[IMAGE_SIZE, IMAGE_SIZE, CHANNELS])
         img = tf.image.random_flip_left_right(img)
         if self.apply_pca:
             img = fancy_pca(img, self.imagenet_pca)
