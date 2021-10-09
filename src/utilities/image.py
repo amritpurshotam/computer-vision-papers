@@ -81,7 +81,7 @@ def resize_image_keep_aspect_ratio(image, lo_dim=256):
         tf.cast(initial_height, dtype=tf.float32) / ratio, dtype=tf.int32
     )
 
-    image = tf.image.resize(image, [new_width, new_height])
+    image = tf.image.resize(image, [new_width, new_height], antialias=True)
     return image
 
 
