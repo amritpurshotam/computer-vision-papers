@@ -3,7 +3,7 @@
 [![Github Workflow Status](https://img.shields.io/github/workflow/status/amritpurshotam/computer-vision-papers/CI)](https://github.com/amritpurshotam/computer-vision-papers/actions/workflows/ci.yaml)
 [![wandb](https://img.shields.io/static/v1?message=Weights+%26+Biases&color=222222&logo=Weights+%26+Biases&logoColor=ffcc33&label=)](https://wandb.ai/amrit/computer-vision-papers)
 
-Reproduction of the architectures and results of some of the most significant papers that came out of the ImageNet challenge.
+Reproduction of the architectures and results of some of the most significant papers that came out of the ImageNet challenge. To limit the scope of this project, I will be focusing on the top-5 % accuracy of a single model (i.e. no ensembles) on the validation set specifically.
 
 ## Getting Started
 
